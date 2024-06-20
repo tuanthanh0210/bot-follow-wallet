@@ -28,15 +28,26 @@ const getNumbersOfTxs = async (url) => {
 let old_numbers_of_transactions = 0;
 const run = async () => {
   while (true) {
-    const res = await getNumbersOfTxs(URL_SCAN + ADDRESS);
-    old_numbers_of_transactions = res;
-    if (res > old_numbers_of_transactions) {
-      // await sentMessageGoogleChat(
-      //   `New transaction of ${ADDRESS}: ${res - old_numbers_of_transactions}`
-      // );
-      console.log("New transaction: ", res - old_numbers_of_transactions);
+    try {
+      const res = await getNumbersOfTxs(URL_SCAN + ADDRESS);
+      if (
+        res > old_numbers_of_transactions &&
+        old_numbers_of_transactions > 0
+      ) {
+        old_numbers_of_transactions = res;
+        await sentMessageGoogleChat(
+          `Have ${
+            res - old_numbers_of_transactions
+          } new transactions\nPlease check it at ${URL_SCAN + ADDRESS}`
+        );
+        console.log("New transaction: ", res - old_numbers_of_transactions);
+      }
+      await sleep(60 * 1000);
+    } catch (error) {
+      console.log("error: ", error.response);
+      await sentMessageGoogleChat(`Error: ${error.response.status}`);
+      process.exit(0);
     }
-    await sleep(60 * 1000);
   }
 };
 
