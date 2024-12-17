@@ -185,10 +185,7 @@ const customImage = async (data) => {
   const ctx = canvas.getContext('2d');
 
   // Load and draw background
-  const urls = [
-    'https://raidenx.io/static/media/Flex-ver-2-min.1eb37bc624e0617bf989.png',
-    'https://raidenx.io/static/media/Flex-ver-1-min.bb643c3246758bab8b33.png',
-  ];
+  const urls = ['./red-bg.png', './green-bg.png'];
   const backgroundImage = await loadImage(
     pnlPercentage < 0 ? urls[0] : urls[1]
   );
@@ -214,52 +211,59 @@ const customImage = async (data) => {
   ctx.fillText(`${pnlPercentage.toFixed(2)}%`, canvas.width / 2, 200);
 
   // Draw Current PnL box
-  const pnlBoxStyle = {
-    width: 200,
-    height: 36,
-    borderRadius: 4,
-  };
+  function drawCurrentPnL(ctx) {
+    const pnlBoxStyle = {
+      width: 180,
+      height: 36,
+      borderRadius: 8,
+    };
 
-  // Tính toán vị trí để box nằm giữa
-  const boxX = (canvas.width - pnlBoxStyle.width) / 2;
-  const boxY = 220;
+    // Tính toán vị trí để box nằm giữa
+    const boxX = (canvas.width - pnlBoxStyle.width) / 2;
+    const boxY = 220;
 
-  // Vẽ background box với màu đen transparent
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-  ctx.beginPath();
-  ctx.roundRect(
-    boxX,
-    boxY,
-    pnlBoxStyle.width,
-    pnlBoxStyle.height,
-    pnlBoxStyle.borderRadius
-  );
-  ctx.fill();
+    // Vẽ background box với màu đen transparent
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(
+      boxX,
+      boxY,
+      pnlBoxStyle.width,
+      pnlBoxStyle.height,
+      pnlBoxStyle.borderRadius
+    );
+    ctx.stroke();
 
-  // Vẽ text riêng biệt
-  ctx.font = '14px Arial';
-  ctx.textAlign = 'left';
+    // Vẽ text riêng biệt
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
 
-  // Vẽ "Current PnL" với màu trắng
-  ctx.fillStyle = '#FFFFFF';
-  const pnlTextWidth = ctx.measureText('Current PnL').width;
-  ctx.fillText('Current PnL:', boxX + 10, boxY + 24);
+    // Vẽ "Current PnL" với màu trắng
+    ctx.fillStyle = 'white';
+    const pnlText = 'Current PnL';
+    const pnlTextWidth = ctx.measureText(pnlText).width;
+    ctx.fillText(pnlText, boxX + 15, boxY + 24);
 
-  // Vẽ giá trị với màu tùy thuộc vào positive/negative
-  ctx.fillStyle = currentPnL >= 0 ? '#4ADE80' : '#ff6676';
-  ctx.font = 'bold 14px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText(
-    `${currentPnL} ${currency}`,
-    boxX + pnlTextWidth + 25,
-    boxY + 24
-  );
+    // Vẽ giá trị với màu tùy thuộc vào positive/negative
+    ctx.fillStyle = currentPnL >= 0 ? '#4ADE80' : '#ff6676';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      `${currentPnL} ${currency}`,
+      boxX + pnlTextWidth + 20,
+      boxY + 24
+    );
+  }
+  drawCurrentPnL(ctx);
 
   function drawInvestmentDetails(ctx, x, y) {
     // Background box cho toàn bộ khu vực
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
     ctx.roundRect(x, y, 360, 120, 8);
-    ctx.fill();
+    ctx.stroke();
 
     const stats = [
       ['Total Invested', `${totalInvested} ${currency}`],
@@ -268,15 +272,33 @@ const customImage = async (data) => {
     ];
 
     stats.forEach((stat, index) => {
+      const rowHeight = 40;
+      const cellPadding = 15;
+      const rowY = y + index * rowHeight;
+
+      // Vẽ border ngang cho mỗi hàng
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.moveTo(x, rowY);
+      ctx.lineTo(x + 360, rowY);
+      ctx.stroke();
+
+      // Vẽ border ngang cuối cùng
+      if (index === stats.length - 1) {
+        ctx.beginPath();
+        ctx.moveTo(x, rowY + rowHeight);
+        ctx.lineTo(x + 360, rowY + rowHeight);
+        ctx.stroke();
+      }
+
       // Label (bên trái)
-      ctx.fillStyle = '#999999'; // Màu xám cho label
+      ctx.fillStyle = 'white';
       ctx.font = '14px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText(stat[0], x + 20, y + 35 + index * 35);
+      ctx.fillText(stat[0], x + cellPadding, rowY + rowHeight / 2 + 5);
 
       // Value (bên phải)
       ctx.textAlign = 'right';
-      // Nếu là Total Profit và giá trị > 0, dùng màu xanh
       if (index === 2 && parseFloat(stat[1]) > 0) {
         ctx.fillStyle = '#4ADE80'; // Màu xanh cho profit dương
       } else if (index === 2 && parseFloat(stat[1]) < 0) {
@@ -284,13 +306,11 @@ const customImage = async (data) => {
       } else {
         ctx.fillStyle = '#ffffff'; // Màu trắng cho các giá trị khác
       }
-      ctx.fillText(stat[1], canvas.width / 2 + 160, y + 35 + index * 35);
+      ctx.fillText(stat[1], x + 360 - cellPadding, rowY + rowHeight / 2 + 5);
     });
   }
-
   drawInvestmentDetails(ctx, canvas.width / 2 - 180, 270);
 
-  // ... existing code ...
   async function drawReferralBox(x, y, referralCode) {
     const boxWidth = 360;
     const boxHeight = 100;
@@ -298,9 +318,11 @@ const customImage = async (data) => {
     const centerX = (canvas.width - boxWidth) / 2;
 
     // Vẽ background box
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.roundRect(centerX, y, boxWidth, boxHeight, 4);
-    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(centerX, y, boxWidth, boxHeight, 8);
+    ctx.stroke();
 
     // Vẽ QR code
     const qrSize = 72;
@@ -360,6 +382,7 @@ const customImage = async (data) => {
 
 // Endpoint để tạo ảnh
 app.post('/generate-image', async (req, res) => {
+  console.log('Generating image...');
   const isPositivePnl = Math.random() > 0.5;
   const buffer = await customImage({
     symbol: '$CHILLFTH',
@@ -368,11 +391,12 @@ app.post('/generate-image', async (req, res) => {
       ? Number(Math.random() * 10).toFixed(5)
       : -Number(Math.random() * 10).toFixed(5),
     currency: 'SUI',
-    totalInvested: isPositivePnl ? 0.00458 : -0.00458,
+    totalInvested: 0.00458,
     totalSold: 0,
     totalProfit: isPositivePnl ? 0.0001936 : -0.0001936,
     referralCode: 'https://raidenx.io/@ref1262915258',
   });
+  console.log('Image generated');
   res.writeHead(200, {
     'Content-Type': 'image/png',
     'Content-Length': buffer.length,
