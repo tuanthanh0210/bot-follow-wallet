@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #canvasContainer {
+        margin: 20px;
+      }
+
+      #copyButton {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #ff4d4d;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvasContainer">
+      <canvas id="cardCanvas"></canvas>
+    </div>
+    <button id="copyButton">Copy as Image</button>
+
+    <script>
+      const canvas = document.getElementById('cardCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Set canvas size
+      canvas.width = 400;
+      canvas.height = 600;
+
+      function drawCard() {
+        // Draw background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, 'rgba(40, 23, 28, 1)');
+        gradient.addColorStop(1, 'rgba(19, 14, 17, 1)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw decorative bubbles
+        drawBubble(360, 20, 40);
+        drawBubble(30, 100, 30);
+        drawBubble(310, 520, 50);
+
+        // Draw text content
+        ctx.fillStyle = 'white';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('$CHILLFRTHR', canvas.width / 2, 120);
+
+        // Draw percentage
+        ctx.fillStyle = '#ff4d4d';
+        ctx.font = '72px Arial';
+        ctx.fillText('-1.59%', canvas.width / 2, 200);
+
+        // Draw PnL box
+        drawBox('Current PnL: -0.041566 SUI', 50, 230, 300, 50);
+
+        // Draw stats box
+        drawStatsBox(50, 300);
+
+        // Draw referral box
+        drawReferralBox(50, 450);
+
+        // Draw timestamp
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Arial';
+        ctx.fillText(
+          'Time Stamp: 2024-12-17 04:20 (UTC)',
+          canvas.width / 2,
+          570
+        );
+      }
+
+      function drawBubble(x, y, size) {
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fill();
+      }
+
+      function drawBox(text, x, y, width, height) {
+        ctx.fillStyle = 'rgba(255, 77, 77, 0.1)';
+        ctx.roundRect(x, y, width, height, 10);
+        ctx.fill();
+
+        ctx.fillStyle = 'white';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, x + width / 2, y + height / 2 + 6);
+      }
+
+      function drawStatsBox(x, y) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.roundRect(x, y, 300, 120, 15);
+        ctx.fill();
+
+        const stats = [
+          ['Total Invested', '0.00458$'],
+          ['Total Sold', '--$'],
+          ['Total Loss', '-0.0007301$'],
+        ];
+
+        stats.forEach((stat, index) => {
+          ctx.fillStyle = '#999';
+          ctx.font = '14px Arial';
+          ctx.textAlign = 'left';
+          ctx.fillText(stat[0], x + 20, y + 30 + index * 35);
+
+          ctx.fillStyle = index === 2 ? '#ff4d4d' : 'white';
+          ctx.textAlign = 'right';
+          ctx.fillText(stat[1], x + 280, y + 30 + index * 35);
+        });
+      }
+
+      function drawReferralBox(x, y) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.roundRect(x, y, 300, 100, 15);
+        ctx.fill();
+
+        // Placeholder for QR code
+        ctx.strokeStyle = '#666';
+        ctx.strokeRect(x + 20, y + 10, 80, 80);
+
+        ctx.fillStyle = '#999';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('REFERRAL CODE', x + 120, y + 30);
+
+        ctx.fillStyle = 'white';
+        ctx.font = '12px Arial';
+        const link = 'https://raidenx.io/@ref1262915258';
+        ctx.fillText(link, x + 120, y + 50);
+
+        ctx.fillStyle = '#999';
+        ctx.fillText('Refer other and earn up to 40%', x + 120, y + 70);
+      }
+
+      // Initial draw
+      drawCard();
+
+      // Copy button functionality
+      document
+        .getElementById('copyButton')
+        .addEventListener('click', function () {
+          canvas.toBlob(function (blob) {
+            try {
+              const item = new ClipboardItem({ 'image/png': blob });
+              navigator.clipboard
+                .write([item])
+                .then(() => alert('Đã sao chép ảnh vào clipboard!'))
+                .catch(() => {
+                  // Fallback to download
+                  const url = canvas.toDataURL('image/png');
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'card-image.png';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  alert('Đã tải ảnh xuống (không thể sao chép vào clipboard)');
+                });
+            } catch (err) {
+              // Fallback for browsers not supporting ClipboardItem
+              const url = canvas.toDataURL('image/png');
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'card-image.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              alert('Đã tải ảnh xuống (trình duyệt không hỗ trợ sao chép)');
+            }
+          }, 'image/png');
+        });
+    </script>
+  </body>
+</html>
